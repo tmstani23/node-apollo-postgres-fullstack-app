@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { ApolloServer, gql } from 'apollo-server-express';
+import userSchema, {messageSchema} from './schema'
 
 //Initialize express application
 const app = express();
@@ -16,13 +17,16 @@ const schema = gql`
     users: [User!]
     me: User
     user(id: ID!): User
-  }
 
-  type User {
-    id: ID!
-    username: String!
+    messages: [Message!]!
+    message(id: ID!): Message!
   }
+  ${userSchema}
+  ${messageSchema}
+  
+  
 `
+// 
 
 // Map of users as data for testing gql queries, schema and resolvers
 let users = {
@@ -35,8 +39,17 @@ let users = {
     username: 'Dave Davids',
   } 
 }
-
-const me = users[1]
+// Message object containing message data
+let messages = {
+    1: {
+      id: '1',
+      text: 'Hello World',
+    },
+    2: {
+      id: '2',
+      text: 'By World',
+    },
+}
 // Resolvers are used to return data for fields from the schema
 const resolvers = {
   Query: {
@@ -46,9 +59,20 @@ const resolvers = {
     user: (parent, {id}) => {
       return users[id];
     },
-    me: () => {
+    // the third argument is taken from the server's context
+    me: (parent, args, {me}) => {
       return me;
     },
+    messages: () => {
+      return Object.values(messages);
+    },
+    message: (parent, {id}) => {
+      return messages[id];
+    }
+  },
+
+  User: {
+    username: user => `${user.firstname} ${user.lastname}`,
   },
 };
 
@@ -56,6 +80,9 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
+  context: {
+    me: users[1],
+  }
 });
 
 //Pass the express server, path and any other middleware into the apollo server
