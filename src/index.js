@@ -3,14 +3,13 @@ import cors from 'cors';
 import express from 'express';
 import { ApolloServer, gql } from 'apollo-server-express';
 import schema from './schema'
+import uuidv4 from 'uuid/v4';
 
 //Initialize express application
 const app = express();
 
 // Cors is needed to perform http requests from another domain other than the server domain.
 app.use(cors());
-
-
 
 // Map of users as data for testing gql queries, schema and resolvers
 let users = {
@@ -63,6 +62,52 @@ const resolvers = {
       return messages[id];
     },
   },
+
+  Mutation: {
+    // create message creates a message object and returns it to the API
+    createMessage: (parent, {text}, {me}) => {
+      // create a unique id for the message using the uuid library
+      const id = uuidv4();
+      const message = {
+        id,
+        text,
+        userId: me.id,
+      };
+      // update message list with new message and update user list with new message id
+      messages[id] = message;
+      users[me.id].messageIds.push(id);
+      return message;
+    },
+    deleteMessage: (parent, {id}) => {
+      // if the input id exists within messages merge it with the other messages
+      const {[id]: message, ...otherMessages} = messages;
+      // if the message doesn't exist in messages return false
+        // This implies no message was deleted.
+      if (!message) {
+        return false;
+      }
+      //If there is a message 
+      // set messages to be the other messages without the deleted message included
+      messages = otherMessages;
+      // return true to imply a message was deleted
+      return true;
+    },
+    
+    // Update message takes a message id and text and updates the message list
+    updateMessage: (parent, {id, text}, {me}) => {
+      
+      const message = {
+        id,
+        text,
+        userId: me.id,
+      };
+      // update message at input id location with new message
+      messages[id] = message;
+      return message;
+    },
+  },
+  
+
   User: {
     messages: user => {
       return Object.values(messages).filter(
@@ -70,11 +115,14 @@ const resolvers = {
       )
     },
   },
+
   Message: {
     user: message => {
       return users[message.userId];
     },
   },
+
+  
 };
 
 //Initialize primary gql server passing in schema and resolvers
