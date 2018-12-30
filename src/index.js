@@ -2,7 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { ApolloServer, gql } from 'apollo-server-express';
-import userSchema, {messageSchema} from './schema'
+import schema from './schema'
 
 //Initialize express application
 const app = express();
@@ -10,33 +10,19 @@ const app = express();
 // Cors is needed to perform http requests from another domain other than the server domain.
 app.use(cors());
 
-//the GQL schema is provided to the Apollo server to provide all available data 
-//for reading and writing.  The Query type is used for reading data.
-const schema = gql`
-  type Query {
-    users: [User!]
-    me: User
-    user(id: ID!): User
 
-    messages: [Message!]!
-    message(id: ID!): Message!
-  }
-  ${userSchema}
-  ${messageSchema}
-  
-  
-`
-// 
 
 // Map of users as data for testing gql queries, schema and resolvers
 let users = {
   1: {
     id: '1',
     username: 'Timothy Stanislav',
+    messageIds: [1],
   },
   2: {
     id: '2',
     username: 'Dave Davids',
+    messageIds: [2, 3],
   } 
 }
 // Message object containing message data
@@ -44,10 +30,17 @@ let messages = {
     1: {
       id: '1',
       text: 'Hello World',
+      userId: '1',
     },
     2: {
       id: '2',
       text: 'By World',
+      userId: '2',
+    },
+    3: {
+      id: '3',
+      text: 'A special message for you!',
+      userId: '2',
     },
 }
 // Resolvers are used to return data for fields from the schema
@@ -68,11 +61,19 @@ const resolvers = {
     },
     message: (parent, {id}) => {
       return messages[id];
-    }
+    },
   },
-
   User: {
-    username: user => `${user.firstname} ${user.lastname}`,
+    messages: user => {
+      return Object.values(messages).filter(
+        message => message.userId === user.id,
+      )
+    },
+  },
+  Message: {
+    user: message => {
+      return users[message.userId];
+    },
   },
 };
 
