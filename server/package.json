@@ -2,9 +2,9 @@
   "name": "node-babel-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.jsx",
   "scripts": {
-    "start": "nodemon --exec babel-node src/index.js",
+    "start": "nodemon --exec babel-node src/index.jsx",
     "test": "echo \"No test specified\" && exit 0"
   },
   "keywords": [],
