@@ -3,9 +3,11 @@ import {gql} from 'apollo-server-express';
 export default gql`
     extend type Query {
         """comments can be enabled within the schema using single quotes
-        double or more line comments require triple quotes"""
-        "messages returns a list of Message objects"
+        double or more line comments require triple quotes
+        
+        messages returns a list of Message objects"""
         messages: [Message!]!
+        
         "message returns a Message object with the given id"
         message(id: ID!): Message!
     }
@@ -21,6 +23,7 @@ export default gql`
             and returns a message"""
         updateMessage(id:ID! text: String!): Message!
       }
+    
     "Message object returned containing three fields: id,text,user"
     type Message {
         id: ID!
