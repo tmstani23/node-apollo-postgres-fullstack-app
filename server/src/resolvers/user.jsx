@@ -2,27 +2,23 @@
 // User Resolvers
 export default {
     Query: {
-        // return the full list of users objects
-        users: (parent, args, {models}) => {
-          return Object.values(models.users);
+        users: async (parent, args, { models }) => {
+            return await models.User.findAll();
         },
-        // user resolver returns a specific user object within the users object using id property
-        user: (parent, {id}, {models}) => {
-          return models.users[id];
+        user: async (parent, { id }, { models }) => {
+            return await models.User.findById(id);
         },
-        // the third argument is taken from the server's context
-        // me returns user[1] object from users objects
-        me: (parent, args, {me}) => {
-          return me;
+        me: async (parent, args, { models, me }) => {
+            return await models.User.findById(me.id);
         },
     },
-
     User: {
-        // Return an array of messages with matching message and user ids
-        messages: (user, args, {models}) => {
-            return Object.values(models.messages).filter(
-                message => message.userId === user.id,
-            )
+        messages: async (user, args, { models }) => {
+            return await models.Message.findAll({
+                where: {
+                    userId: user.id,
+                },
+            });
         },
     },
-}
+};

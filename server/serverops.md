@@ -12,3 +12,6 @@ Basic Commands:
     \c mydatabasename - Connect to another database.
     \d - List the relations of your currently connected database.
     \d mytablename - Shows information for a specific table.
+
+    SELECT * from users;
+    SELECT text from messages;

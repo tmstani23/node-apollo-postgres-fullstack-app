@@ -12,24 +12,60 @@ const app = express();
 
 // Cors is needed to perform http requests from another domain other than the server domain.
 app.use(cors());
-
+console.log(process.env.DATABASE);
 
 //Initialize primary gql server passing in schema and resolvers
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
-  context: {
+  context: async() => ({
     models,
-    me: models.users[1],
-  }
+    me: await models.User.findByLogin('tmstani23'),
+  }),
 });
 
 //Pass the express server, path and any other middleware into the apollo server
 server.applyMiddleware({app, path: '/graphql'});
 
-sequelize.sync().then(async () => {
+const eraseDatabaseOnSync = true;
+sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
+  if (eraseDatabaseOnSync) {
+    createUsersWithMessages();
+  }
   app.listen({ port: 4000 }, () => {
     console.log('Apollo Server on http://localhost:4000/graphql');
   });
 });
+
+const createUsersWithMessages = async () => {
+  await models.User.create(
+    {
+      username: 'tmstani23',
+      messages: [
+        {
+          text: 'Published the Road to learn React',
+        },
+      ],
+    },
+    {
+      include: [models.Message],
+    },
+  );
+  await models.User.create(
+    {
+      username: 'ddavids',
+      messages: [
+        {
+          text: 'Happy to release ...',
+        },
+        {
+          text: 'Published a complete ...',
+        },
+      ],
+    },
+    {
+      include: [models.Message],
+    },
+  );
+};
 
