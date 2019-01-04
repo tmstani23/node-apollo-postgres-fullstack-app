@@ -1,5 +1,6 @@
 import {gql} from 'apollo-server-express';
 
+
 export default gql`
     extend type Query {
         """users query returns a list of type User"""
@@ -15,7 +16,9 @@ export default gql`
             username: String!
             email: String!
             password: String!
-        ): Token
+        ): Token!
+
+        signIn(login: String!, password: String!): Token!
     }
 
     type Token {
