@@ -1,5 +1,6 @@
 import uuidv4 from 'uuid/v4';
 import { triggerAsyncId } from 'async_hooks';
+import { ForbiddenError } from 'apollo-server';
 
 // Message Resolvers:
 export default {
@@ -16,15 +17,14 @@ export default {
   Mutation: {
     // create a new message using sequelize create.  Includes promise error handling
     createMessage: async (parent, { text }, { me, models }) => {
-      
-      try {
-        return await models.Message.create({
-          text,
-          userId: me.id,
-        });
-      } catch (error) {
-        throw new Error(error);
+      if (!me) {
+        throw new ForbiddenError('Not authenticated as user.');
       }
+      
+      return await models.Message.create({
+        text,
+        userId: me.id,
+      });
     },
     // delete message from the db using sequelize destroy method
     deleteMessage: async (parent, { id }, { models }) => {
