@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
+import uuidv4 from 'uuid/v4';
 import express from 'express';
 import {
   ApolloServer,
@@ -40,6 +41,18 @@ const getMe = async req => {
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
+  formatError: error => {
+    // remove the internal sequelize error message
+    // leave only the important validation error
+    const message = error.message
+      .replace('SequelizeValidationError: ', '')
+      .replace('Validation error: ', '');
+
+    return {
+      ...error,
+      message,
+    };
+  },
   context: async ({req}) => {
     // authenticated me user is injected into the apollo server's context with each request
     // The me user data is encoded into the token using createToken 
@@ -51,8 +64,7 @@ const server = new ApolloServer({
       me,
       secret: process.env.SECRET,
     };
-  },
-    
+  },  
 });
 
 
@@ -61,10 +73,12 @@ const server = new ApolloServer({
 server.applyMiddleware({app, path: '/graphql'});
 
 const eraseDatabaseOnSync = true;
+
 sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
   if (eraseDatabaseOnSync) {
     createUsersWithMessages();
   }
+
   app.listen({ port: 4000 }, () => {
     console.log('Apollo Server on http://localhost:4000/graphql');
   });
@@ -76,6 +90,7 @@ const createUsersWithMessages = async () => {
       username: 'tmstani23',
       email: 'tmstani23@gmail.com',
       password: 'tmstani23',
+      role: 'ADMIN',
       messages: [
         {
           text: 'Published the Road to learn React',
@@ -86,6 +101,7 @@ const createUsersWithMessages = async () => {
       include: [models.Message],
     },
   );
+  
   await models.User.create(
     {
       username: 'ddavids',

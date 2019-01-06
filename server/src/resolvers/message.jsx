@@ -1,6 +1,8 @@
 import uuidv4 from 'uuid/v4';
 import { triggerAsyncId } from 'async_hooks';
 import { ForbiddenError } from 'apollo-server';
+import { combineResolvers } from 'graphql-resolvers';
+import { isAuthenticated, isMessageOwner } from './authorization';
 
 // Message Resolvers:
 export default {
@@ -16,22 +18,29 @@ export default {
   },
   Mutation: {
     // create a new message using sequelize create.  Includes promise error handling
-    createMessage: async (parent, { text }, { me, models }) => {
-      if (!me) {
-        throw new ForbiddenError('Not authenticated as user.');
-      }
-      
-      return await models.Message.create({
-        text,
-        userId: me.id,
-      });
-    },
+    createMessage: combineResolvers(
+      // isAuth resolver always runs before createmessage resolver
+      isAuthenticated,
+      async (parent, {text}, {models, me}) => {
+        return await models.Message.create({
+          text,
+          userId: me.id,
+        });
+      },
+
+    ),
     // delete message from the db using sequelize destroy method
-    deleteMessage: async (parent, { id }, { models }) => {
-      return await models.Message.destroy({ where: { id } });
-    },
+    deleteMessage: combineResolvers(
+      // first check if user is authenticated
+      isAuthenticated,
+      // next check if current user is message creater
+      isMessageOwner,
+      async (parent, { id }, { models }) => {
+        return await models.Message.destroy({ where: { id } });
+      },
+    )
   },
-  // find a user by id
+  // find a user by id and return that user object
   Message: {
     user: async (message, args, { models }) => {
       return await models.User.findById(message.userId);
