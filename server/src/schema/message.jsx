@@ -6,7 +6,7 @@ export default gql`
         double or more line comments require triple quotes
         
         messages returns a list of Message objects"""
-        messages: [Message!]!
+        messages(cursor: String, limit: Int): [Message!]!
         
         "message returns a Message object with the given id"
         message(id: ID!): Message!
@@ -28,6 +28,7 @@ export default gql`
     type Message {
         id: ID!
         text: String!
+        createdAt: Date!
         user: User!
     }
       

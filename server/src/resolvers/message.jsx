@@ -3,13 +3,38 @@ import { triggerAsyncId } from 'async_hooks';
 import { ForbiddenError } from 'apollo-server';
 import { combineResolvers } from 'graphql-resolvers';
 import { isAuthenticated, isMessageOwner } from './authorization';
+import Sequelize from 'sequelize';
 
 // Message Resolvers:
 export default {
   Query: {
     // perform a sequelize findAll on the database to find all messages
-    messages: async (parent, args, { models }) => {
-      return await models.Message.findAll();
+    messages: async (
+      parent,
+      {cursor, limit = 100},
+      { models }) => {
+
+      // set cursor at last created at date of previous page:
+      const cursorOptions = cursor    
+        // Check to make sure cursor isn't needed for first page with ternary
+        ? { 
+            where: {
+              createdAt: {
+              // find messages less than value of cursor date property
+                [Sequelize.Op.lt]: cursor,
+              },
+            },
+          }
+        : {};
+      // return list of ordered messages ending at limit number beginning at cursor
+      return await models.Message.findAll({
+        // order list by createdAt date
+        order: [['createdAt', 'DESC']],
+        limit,
+        // cursor object abstracted after ternary check above
+        ...cursorOptions,
+       
+      });
     },
     // find a specific message by id in the database
     message: async (parent, { id }, { models }) => {

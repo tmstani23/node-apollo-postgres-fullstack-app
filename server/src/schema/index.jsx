@@ -9,7 +9,8 @@ import messageSchema from './message';
 
 // linkSchema defines all types shared within the stitched schemas
 const linkSchema = gql`
-  
+  scalar Date  
+
   type Query {
     _: Boolean
   }
