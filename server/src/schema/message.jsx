@@ -6,7 +6,7 @@ export default gql`
         double or more line comments require triple quotes
         
         messages returns a list of Message objects"""
-        messages(cursor: String, limit: Int): [Message!]!
+        messages(cursor: String, limit: Int): MessageConnection!
         
         "message returns a Message object with the given id"
         message(id: ID!): Message!
@@ -22,7 +22,16 @@ export default gql`
         """updateMessage updates the message at the input id with the input string
             and returns a message"""
         updateMessage(id:ID! text: String!): Message!
-      }
+    }
+
+    type MessageConnection {
+        edges: [Message!]!
+        pageInfo: PageInfo!
+    }
+
+    type PageInfo {
+        endCursor: Date!
+    }
     
     "Message object returned containing three fields: id,text,user"
     type Message {

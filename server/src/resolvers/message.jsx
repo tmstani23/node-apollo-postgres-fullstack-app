@@ -26,15 +26,24 @@ export default {
             },
           }
         : {};
+      
+      const messages = await models.Message.findAll({
+        
+          // order list by createdAt date
+          order: [['createdAt', 'DESC']],
+          limit,
+          // cursor object abstracted after ternary check above
+          ...cursorOptions,
+         
+        });
+
       // return list of ordered messages ending at limit number beginning at cursor
-      return await models.Message.findAll({
-        // order list by createdAt date
-        order: [['createdAt', 'DESC']],
-        limit,
-        // cursor object abstracted after ternary check above
-        ...cursorOptions,
-       
-      });
+      return {
+        edges: messages,
+        pageInfo: {
+          endCursor: messages[messages.length - 1].createdAt,
+        },
+      }; 
     },
     // find a specific message by id in the database
     message: async (parent, { id }, { models }) => {
