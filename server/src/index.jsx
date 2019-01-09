@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import uuidv4 from 'uuid/v4';
 import express from 'express';
+import http from 'http';
 import {
   ApolloServer,
   AuthenticationError,
@@ -53,17 +54,27 @@ const server = new ApolloServer({
       message,
     };
   },
-  context: async ({req}) => {
-    // authenticated me user is injected into the apollo server's context with each request
+  context: async ({req, connection}) => {
+    // if Subscription connection exists
+    if (connection) {
+      return {
+        models,
+      };
+    }
+    // If http requests (graphql mutations and queries)
+    if (req) {
+      // authenticated me user is injected into the apollo server's context with each request
     // The me user data is encoded into the token using createToken 
       //sparing additional database requests
     const me = await getMe(req);
     
-    return {
-      models,
-      me,
-      secret: process.env.SECRET,
-    };
+      return {
+        models,
+        me,
+        secret: process.env.SECRET,
+      };
+    }
+    
   },  
 });
 
@@ -72,6 +83,10 @@ const server = new ApolloServer({
 //Pass the express server, path and any other middleware into the apollo server
 server.applyMiddleware({app, path: '/graphql'});
 
+// create an http server and install subscription handlers
+const httpServer = http.createServer(app);
+server.installSubscriptionHandlers(httpServer);
+
 const eraseDatabaseOnSync = true;
 
 sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
@@ -79,7 +94,7 @@ sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
     createUsersWithMessages(new Date());
   }
 
-  app.listen({ port: 4000 }, () => {
+  httpServer.listen({ port: 4000 }, () => {
     console.log('Apollo Server on http://localhost:4000/graphql');
   });
 });

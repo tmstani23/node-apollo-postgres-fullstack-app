@@ -24,15 +24,6 @@ export default gql`
         updateMessage(id:ID! text: String!): Message!
     }
 
-    type MessageConnection {
-        edges: [Message!]!
-        pageInfo: PageInfo!
-    }
-
-    type PageInfo {
-        endCursor: Date!
-    }
-    
     "Message object returned containing three fields: id,text,user"
     type Message {
         id: ID!
@@ -40,5 +31,25 @@ export default gql`
         createdAt: Date!
         user: User!
     }
+
+    extend type Subscription {
+        messageCreated: MessageCreated!
+    }
+
+    type MessageCreated {
+        message: Message!
+    }
+
+    type MessageConnection {
+        edges: [Message!]!
+        pageInfo: PageInfo!
+    }
+
+    type PageInfo {
+        hasNextPage: Boolean!
+        endCursor: String!
+    }
+    
+   
       
 `;
