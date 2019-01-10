@@ -2,10 +2,11 @@
   "name": "node-babel-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.jsx",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon --exec babel-node src/index.jsx",
-    "test": "echo \"No test specified\" && exit 0"
+    "start": "nodemon --exec babel-node src/index.js",
+    "test-server": "TEST_DATABASE=mytestdatabase npm start",
+    "test": "mocha --require @babel/register 'src/**/*.spec.js'"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,10 @@
     "@babel/core": "^7.1.6",
     "@babel/node": "^7.0.0",
     "@babel/preset-env": "^7.1.6",
+    "@babel/register": "^7.0.0",
+    "axios": "^0.18.0",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
     "nodemon": "^1.18.7"
   },
   "dependencies": {

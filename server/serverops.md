@@ -4,7 +4,9 @@ pg_ctl -D /usr/local/var/postgres start
 pg_ctl -D /usr/local/var/postgres stop
 
 To open postgres shell:
-psql -D godatabase -U a83h8zz
+psql -d godatabase -U a83h8zz
+
+
 
 Basic Commands:
 
