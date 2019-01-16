@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
-import uuidv4 from 'uuid/v4';
 import express from 'express';
 import http from 'http';
 import {

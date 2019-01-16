@@ -31,9 +31,35 @@ describe('users', () => {
                 },
             };
             const result = await userApi.user({
-                id: '42'
+                id: '24'
             });
             expect(result.data).to.eql(expectedResult);
+        });
+    });
+
+    // Test to see if user who is not admin can deleteUser from the database
+    describe('deleteUser(id: String!): Boolean!', () => {
+        it('returns an error because only admins can delete a user', async () => {
+            const {
+                data: {
+                    data: {
+                        signIn: {token},
+                    },
+                },
+            } = await userApi.signIn({
+                login: 'ddavids',
+                password: 'ddavids',
+            });
+
+            const {
+                data: {errors},   
+            } = await userApi.deleteUser({id: '1'}, token);
+            
+            
+            // Expect return error message to be Not authorized as admin after attempting to delete user
+            expect(errors[0].message).to.eql('Not authorized as ADMIN');
+           
+            
         });
     });
 });
