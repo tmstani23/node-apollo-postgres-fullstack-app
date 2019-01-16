@@ -1,4 +1,4 @@
-# node-apollo-react-fullstack-app
+# node-apollo-postgres-fullstack-app
 
 ## Under Development
 
