@@ -56,6 +56,7 @@ describe('users', () => {
             } = await userApi.deleteUser({id: '1'}, token);
             
             
+            
             // Expect return error message to be Not authorized as admin after attempting to delete user
             expect(errors[0].message).to.eql('Not authorized as ADMIN');
            

@@ -91,10 +91,12 @@ export default {
       },
     )
   },
-  // find a user by id and return that user object
+  // Return messages from the batched loader user key list
+  // All users are batched into one query request instead of individual for each user.
   Message: {
-    user: async (message, args, { models }) => {
-      return await models.User.findById(message.userId);
+    user: async (message, args, { loaders }) => {
+      // All the identifiers are batched into one request and sent at the same time
+      return await loaders.user.load(message.userId);
     },
   },
 

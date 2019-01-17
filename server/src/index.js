@@ -11,6 +11,7 @@ import {
 import schema from './schema';
 import resolvers from './resolvers';
 import models, {sequelize} from './models';
+import DataLoader from 'dataloader';
 
 //Initialize express application
 const app = express();
@@ -36,6 +37,23 @@ const getMe = async req => {
   }
   // else the me user remains undefined and unauthenticated
 };
+
+
+// Find all the users based on input keys in the db.  Return an array of keys matching users in the db
+const batchUsers = async (keys, models) => {
+  const users = await models.User.findAll({
+    where: {
+      id: {
+        $in: keys,
+      },
+    },
+  });
+  // Return an array of keys with matching user ids from user array
+  return keys.map(key => users.find(user => user.id === key));
+}
+
+//Initialize DataLoader for batching.  The dataLoader also functions as a cache
+const userLoader = new DataLoader(keys => batchUsers(keys, models));
 
 //Initialize primary gql server passing in schema and resolvers
 const server = new ApolloServer({
@@ -71,9 +89,12 @@ const server = new ApolloServer({
         models,
         me,
         secret: process.env.SECRET,
+        // The DataLoader takes a function which in this case is ordered keys and models to be passed as context to the resolvers
+        loaders: {
+          user: userLoader,
+        },
       };
-    }
-    
+    } 
   },  
 });
 
@@ -142,6 +163,9 @@ const createUsersWithMessages = async date => {
     },
   );
 };
+
+
+
 
 
 
