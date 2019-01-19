@@ -12,6 +12,8 @@ import schema from './schema';
 import resolvers from './resolvers';
 import models, {sequelize} from './models';
 import DataLoader from 'dataloader';
+import loaders from './loaders';
+
 
 //Initialize express application
 const app = express();
@@ -37,23 +39,6 @@ const getMe = async req => {
   }
   // else the me user remains undefined and unauthenticated
 };
-
-
-// Find all the users based on input keys in the db.  Return an array of keys matching users in the db
-const batchUsers = async (keys, models) => {
-  const users = await models.User.findAll({
-    where: {
-      id: {
-        $in: keys,
-      },
-    },
-  });
-  // Return an array of keys with matching user ids from user array
-  return keys.map(key => users.find(user => user.id === key));
-}
-
-//Initialize DataLoader for batching.  The dataLoader also functions as a cache
-const userLoader = new DataLoader(keys => batchUsers(keys, models));
 
 //Initialize primary gql server passing in schema and resolvers
 const server = new ApolloServer({
@@ -89,9 +74,10 @@ const server = new ApolloServer({
         models,
         me,
         secret: process.env.SECRET,
-        // The DataLoader takes a function which in this case is ordered keys and models to be passed as context to the resolvers
+        // The DataLoader takes a function of ordered keys and models to be passed as context to the resolvers
         loaders: {
-          user: userLoader,
+          user: new DataLoader(keys => 
+            loaders.user.batchUsers(keys, models)),
         },
       };
     } 
@@ -103,32 +89,35 @@ const server = new ApolloServer({
 //Pass the express server, path and any other middleware into the apollo server
 server.applyMiddleware({app, path: '/graphql'});
 
-// create an http server and install subscription handlers
+// create an http server and install subscription handlers.  Used for monitoring 
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
-// Erase all values in the database on connection
-const eraseDatabaseOnSync = true;
 
 // Set database reseeding flag to depend on test database env variable
 const isTest = !!process.env.TEST_DATABASE;
 
+//Sync all models with the database, force will drop all other tables
 sequelize.sync({ force: isTest }).then(async () => {
   if (isTest) {
+    //Seed the test database
     createUsersWithMessages(new Date());
   }
-
+  //set httpserver to listen on port 4000.  
+  //used in subscriptions to allow real time communication between user message updates.
   httpServer.listen({ port: 4000 }, () => {
     console.log('Apollo Server on http://localhost:4000/graphql');
   });
 });
 
+// Create two seed users object with messages
 const createUsersWithMessages = async date => {
   await models.User.create(
     {
       username: 'tmstani23',
       email: 'tmstani23@happy.com',
       password: 'tmstani23',
+      // role is used to determine allowances for operations like deleteUser
       role: 'ADMIN',
       messages: [
         {
