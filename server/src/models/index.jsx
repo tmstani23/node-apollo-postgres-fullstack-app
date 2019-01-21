@@ -15,8 +15,8 @@ if (process.env.DATABASE_URL){
       dialect: 'postgres',
     },
   );
-}heroku config:set
-SECRET
+}
+
 
 const models = {
   User: sequelize.import('./user'),
