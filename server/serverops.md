@@ -17,3 +17,6 @@ Basic Commands:
 
     SELECT * from users;
     SELECT text from messages;
+
+Heroku postgres database url:
+postgres://dvmdjxyzdadzfx:8fef95fe9997bb51dc97061f4fe6c5a57b72ed30f081e9733831dce088762a7b@ec2-54-243-228-140.compute-1.amazonaws.com:5432/d5pvnc74di1hbi

@@ -42,6 +42,7 @@ const getMe = async req => {
 
 //Initialize primary gql server passing in schema and resolvers
 const server = new ApolloServer({
+  introspection: true,
   typeDefs: schema,
   resolvers,
   formatError: error => {
@@ -97,16 +98,21 @@ server.installSubscriptionHandlers(httpServer);
 // Set database reseeding flag to depend on test database env variable
 const isTest = !!process.env.TEST_DATABASE;
 
+//Specify if production environment
+const isProduction = !!process.env.DATABASE_URL;
+//Set fallback port incase heroku port assignment fails
+const port = process.env.PORT || 4000;
+
 //Sync all models with the database, force will drop all other tables
-sequelize.sync({ force: isTest }).then(async () => {
-  if (isTest) {
+sequelize.sync({ force: isTest || isProduction }).then(async () => {
+  if (isTest || isProduction) {
     //Seed the test database
     createUsersWithMessages(new Date());
   }
   //set httpserver to listen on port 4000.  
   //used in subscriptions to allow real time communication between user message updates.
-  httpServer.listen({ port: 4000 }, () => {
-    console.log('Apollo Server on http://localhost:4000/graphql');
+  httpServer.listen({ port }, () => {
+    console.log(`Apollo Server on http://localhost:${port}/graphql`);
   });
 });
 
