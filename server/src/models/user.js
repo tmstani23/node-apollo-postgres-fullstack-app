@@ -28,12 +28,17 @@ const user = (sequelize, DataTypes) => {
                 len: [7, 42],
             },
         },
+        role: {
+            type: DataTypes.STRING,
+        },
     });
+
     User.associate = models => {
         User.hasMany(models.Message, {
             onDelete: 'CASCADE'
         });
     };
+
     User.findByLogin = async login => {
         let user = await User.findOne({
             where: {username: login},
@@ -44,21 +49,24 @@ const user = (sequelize, DataTypes) => {
                 where: {email: login},
             });
         }
+
         return user;
     };
+
     User.beforeCreate(async user => {
         user.password = await user.generatePasswordHash();
     });
     
     User.prototype.generatePasswordHash = async function() {
         const saltRounds = 10;
-        return await bcrypt.hash(this.password, saltRounds);
+        return await bcrypt.hashSync(this.password, saltRounds);
     };
 
     User.prototype.validatePassword = async function(password) {
-        return await bcrypt.compare(password, this.password);
+        return await bcrypt.compareSync(password, this.password);
     }
 
     return User;
 };
+
 export default user;
