@@ -43,6 +43,7 @@ const getMe = async req => {
 //Initialize primary gql server passing in schema and resolvers
 const server = new ApolloServer({
   introspection: true,
+  playground: true,
   typeDefs: schema,
   resolvers,
   formatError: error => {
