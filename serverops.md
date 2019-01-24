@@ -23,3 +23,6 @@ postgres://dvmdjxyzdadzfx:8fef95fe9997bb51dc97061f4fe6c5a57b72ed30f081e9733831dc
 
 Heroku cli commands
 git push heroku master - deploy build to heroku
+heroku git:remote -a appNamehere
+git remote -v - verify remote is set for app
+heroku config:get DATABASE_URL 0 shows heroku's created database url.
